@@ -57,7 +57,7 @@ class VeiculoViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_404_NOT_FOUND)
             
             # Achou o cliente? Troca o CPF pelo ID real para o banco de dados salvar!
-            dados['cliente'] = cliente.id
+            dados['cliente'] = cliente.cpf
 
         # Verifica se pelo menos o ID final chegou
         if 'cliente' not in dados or not dados.get('cliente'):
