@@ -2,18 +2,20 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.http import Http404
+from django.db import transaction # 👇 ADICIONADO PARA A MÁGICA DO ESTOQUE
 from .models import OrdemServico
 from .serializers import OrdemServicoSerializer
 
 class OrdemServicoViewSet(viewsets.ModelViewSet):
-    queryset = OrdemServico.objects.all()
+    # 👇 Adicionei o order_by para as OS mais recentes aparecerem primeiro
+    queryset = OrdemServico.objects.all().order_by('-data_abertura')
     serializer_class = OrdemServicoSerializer
 
     def get_object(self):
         try:
             return super().get_object()
         except Http404:
-            raise Http404("Erro: A Ordem de Serviço informada não está cadastrado ou encontra-se suspenso.")
+            raise Http404("Erro: A Ordem de Serviço informada não está cadastrada ou encontra-se suspensa.")
         
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -62,6 +64,7 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
                 "detalhes": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        # Aqui o seu código já chama o perform_update, então a mágica do estoque vai rodar!
         self.perform_update(serializer)
         
         return Response({
@@ -69,21 +72,20 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
             "dados": serializer.data
         }, status=status.HTTP_200_OK)
     
-    def destroy(self, request, *args, **kwargs):
-        try:
-            instance = self.get_object()
-        except Http404 as e:
-            return Response({"erro": "Erro: A Ordem de Serviço informada não existe."}, status=status.HTTP_404_NOT_FOUND)
-        
-        try:
-            # Em vez de deletar, nós mudamos o status para 'cancelado' e salvamos
-            instance.status = 'cancelado'
-            instance.save()
-            
-            return Response({"mensagem": "A Ordem de Serviço foi cancelada com sucesso!"}, status=status.HTTP_200_OK)
-            
-        except Exception:
-            return Response(
-                {"erro": "Erro: Não foi possível cancelar a Ordem de Serviço devido a uma instabilidade no sistema. Tente novamente."}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    # -------------------------------------------------------------
+    # 👇 A MÁGICA DO ESTOQUE (Inserida no seu código!)
+    # -------------------------------------------------------------
+    def perform_update(self, serializer):
+        os_antiga = self.get_object()
+        status_antigo = os_antiga.status
+
+        nova_os = serializer.save()
+
+        # Se mudou para FINALIZADA, debita do estoque
+        if status_antigo != 'FINALIZADA' and nova_os.status == 'FINALIZADA':
+            with transaction.atomic():
+                for item in nova_os.insumos.all():
+                    insumo = item.insumo
+                    insumo.quantidade -= item.quantidade_utilizada
+                    insumo.save()
+    # -------------------------------------------------------------
