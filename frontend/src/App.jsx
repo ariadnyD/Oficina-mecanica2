@@ -7,6 +7,7 @@ import Login from './pages/login/Login';
 import CadastroFuncionario from './pages/funcionario/CadastroFuncionario';
 import GerenciarUsuarios from './pages/funcionario/GerenciarUsuarios';
 import TelaInsumos from './pages/insumo/TelaInsumos';
+import TelaOrdensServico from './pages/ordem_servico/TelaOrdensServico';
 import api from './services/api';
 import './App.css';
 
@@ -78,6 +79,9 @@ function LayoutProtegido({ children }) {
         <Link to="/insumos" style={{ padding: '12px', backgroundColor: 'var(--social-bg)', borderRadius: '8px', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none', textAlign: 'center', border: '1px solid var(--border)' }}>
           📦 Estoque de Insumos
         </Link>
+        <Link to="/ordens-servico" style={{ padding: '12px', backgroundColor: 'var(--social-bg)', borderRadius: '8px', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none', textAlign: 'center', border: '1px solid var(--border)' }}>
+          📋 Ordens de Serviço
+        </Link>
         
         {ehAdmin && (
         <>
@@ -113,6 +117,7 @@ function App() {
           <Route path="/cadastro-funcionario" element={<LayoutProtegido><CadastroFuncionario /></LayoutProtegido>} />
           <Route path="/gerenciar-usuarios" element={<LayoutProtegido><GerenciarUsuarios /></LayoutProtegido>} />
           <Route path="/insumos" element={<LayoutProtegido><TelaInsumos /></LayoutProtegido>} />
+          <Route path="/ordens-servico" element={<LayoutProtegido><TelaOrdensServico /></LayoutProtegido>} />
 
           {/* Se digitar qualquer rota maluca, manda de volta pro login */}
           <Route path="*" element={<Navigate to="/" replace />} />
