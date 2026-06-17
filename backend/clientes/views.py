@@ -1,15 +1,20 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, BasePermission, SAFE_METHODS
 from django.http import Http404
 from .models import Cliente
 from .serializers import ClienteSerializer
 
+class PodeCadastrarMasNaoEditar(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'POST']:
+            return request.user.is_authenticated
+        return request.user.is_authenticated and request.user.is_staff
+
 class ClienteViewSet(viewsets.ModelViewSet):
     serializer_class = ClienteSerializer
-    # RN02 - Apenas usuários com perfil "Administrador" (is_staff=True no Django)
-    # permission_classes = [IsAuthenticated, IsAdminUser] 
+    permission_classes = [PodeCadastrarMasNaoEditar]
 
     def get_queryset(self):
         # Filtra apenas clientes ativos (não deletados logicamente)
