@@ -39,7 +39,7 @@ function FormInsumo({ aoCancelar, aoSalvarSucesso, insumoEmEdicao }) {
       } else {
         await api.post('core/insumo/', dadosInsumo);
       }
-      aoSalvarSucesso(); // Chama a função da Tela principal para recarregar e fechar o form
+      aoSalvarSucesso(); 
     } catch (erro) {
       if (erro.response?.data?.non_field_errors) {
         mostrarMensagem('Erro: Já existe um insumo com este nome e marca.', 'erro');
@@ -51,46 +51,48 @@ function FormInsumo({ aoCancelar, aoSalvarSucesso, insumoEmEdicao }) {
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--social-bg)', padding: '20px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-      <h3 style={{ marginTop: 0 }}>{insumoEmEdicao ? '✏️ Editar Insumo' : '➕ Cadastrar Novo Insumo'}</h3>
+    <div style={{ backgroundColor: 'var(--social-bg)', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3>{insumoEmEdicao ? 'Editar Insumo' : 'Novo Insumo'}</h3>
+        <button type="button" onClick={aoCancelar} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px' }}>❌ Fechar</button>
+      </div>
       
       {mensagem.texto && (
-        <div style={{ padding: '10px', marginBottom: '15px', backgroundColor: mensagem.tipo === 'sucesso' ? '#dff0d8' : '#f2dede', color: mensagem.tipo === 'sucesso' ? '#3c763d' : '#a94442', borderRadius: '4px', fontWeight: 'bold' }}>
+        <p style={{ fontWeight: 'bold', color: mensagem.tipo === 'sucesso' ? '#5cb85c' : '#d9534f' }}>
           {mensagem.texto}
-        </div>
+        </p>
       )}
 
       <form onSubmit={handleSubmeter}>
-        <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-          <div style={{ flex: 1 }}>
+        {/* 👇 GRID LAYOUT (igual ao Veículos) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+          
+          <div>
             <label style={{ display: 'block', marginBottom: '5px' }}>Nome:*</label>
             <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
           </div>
-          <div style={{ flex: 1 }}>
+          
+          <div>
             <label style={{ display: 'block', marginBottom: '5px' }}>Marca:*</label>
             <input type="text" value={marca} onChange={(e) => setMarca(e.target.value)} style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
           </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-          <div style={{ flex: 2 }}>
+          {/* Ocupa duas colunas do grid, igual o CPF em Veiculos */}
+          <div style={{ gridColumn: 'span 2' }}>
             <label style={{ display: 'block', marginBottom: '5px' }}>Descrição:*</label>
             <input type="text" value={descricao} onChange={(e) => setDescricao(e.target.value)} style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
           </div>
-          <div style={{ flex: 1 }}>
+
+          <div>
             <label style={{ display: 'block', marginBottom: '5px' }}>Quantidade:</label>
             <input type="number" step="0.01" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
           </div>
+          
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-          <button type="submit" style={{ padding: '10px 15px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-            Salvar
-          </button>
-          <button type="button" onClick={aoCancelar} style={{ padding: '10px 15px', backgroundColor: '#ccc', color: '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-            Cancelar
-          </button>
-        </div>
+        <button type="submit" style={{ padding: '10px 15px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', fontWeight: 'bold' }}>
+          {insumoEmEdicao ? "Salvar Alterações" : "Salvar Insumo"}
+        </button>
       </form>
     </div>
   );
