@@ -8,7 +8,9 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
   const [tipo, setTipo] = useState('');
   const [cor, setCor] = useState('');
   const [ano, setAno] = useState('');
-  const [cpfDono, setCpfDono] = useState(''); // Este será o valor do campo 'cliente' no backend
+  const [cpfDono, setCpfDono] = useState('');
+  // NOVA CAIXA: Para garantir que o ID do cliente da edição seja mantido
+  const [idClienteEdicao, setIdClienteEdicao] = useState(null);
   
   const [mensagem, setMensagem] = useState('');
   const [errosCampos, setErrosCampos] = useState({}); 
@@ -21,6 +23,8 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
       setTipo(veiculoEmEdicao.tipo || '');
       setCor(veiculoEmEdicao.cor || '');
       setAno(veiculoEmEdicao.ano || '');
+      // MÁGICA: Captura o ID do cliente que veio no objeto veiculoEmEdicao
+      setIdClienteEdicao(veiculoEmEdicao.cliente || null);
     }
   }, [veiculoEmEdicao]);
 
@@ -29,14 +33,18 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
     setMensagem('');
     setErrosCampos({});
 
-    // Validação básica
-    if (!placa || !marca || !modelo || !tipo || !cor || !ano || (!clientePreSelecionado && !cpfDono && !veiculoEmEdicao)) {
+    // Prioridade de quem é o dono:
+    // 1. Veio via link (clientePreSelecionado)?
+    // 2. É uma edição (usa o idClienteEdicao que salvamos no useEffect)?
+    // 3. Digitou o CPF na mão (cpfDono)?
+    const idClienteFinal = clientePreSelecionado || idClienteEdicao || cpfDono;
+
+    if (!placa || !marca || !modelo || !tipo || !cor || !ano || !idClienteFinal) {
       setMensagem("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
 
     try {
-      // O campo 'cliente' espera o CPF (a PK do cliente)
       const dadosVeiculo = { 
         placa, 
         marca, 
@@ -44,7 +52,7 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
         tipo, 
         cor, 
         ano,
-        cliente: clientePreSelecionado || cpfDono 
+        cliente: idClienteFinal 
       };
       
       if (veiculoEmEdicao) {
@@ -74,7 +82,7 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
       <form onSubmit={handleSubmeter}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
           
-          {/* Se não veio via atalho e não é edição, pede o CPF */}
+          {/* Só pede o CPF se não for edição e não veio via link */}
           {!clientePreSelecionado && !veiculoEmEdicao && (
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ display: 'block', marginBottom: '5px' }}>CPF do Cliente:</label>
