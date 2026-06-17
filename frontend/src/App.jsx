@@ -8,6 +8,7 @@ import CadastroFuncionario from './pages/funcionario/CadastroFuncionario';
 import GerenciarUsuarios from './pages/funcionario/GerenciarUsuarios';
 import TelaInsumos from './pages/insumo/TelaInsumos';
 import TelaOrdensServico from './pages/ordem_servico/TelaOrdensServico';
+import DetalhesOrdemServico from './pages/ordem_servico/DetalhesOrdemServico';
 import api from './services/api';
 import './App.css';
 
@@ -118,7 +119,8 @@ function App() {
           <Route path="/gerenciar-usuarios" element={<LayoutProtegido><GerenciarUsuarios /></LayoutProtegido>} />
           <Route path="/insumos" element={<LayoutProtegido><TelaInsumos /></LayoutProtegido>} />
           <Route path="/ordens-servico" element={<LayoutProtegido><TelaOrdensServico /></LayoutProtegido>} />
-
+          <Route path="/ordens-servico/:id" element={<LayoutProtegido><DetalhesOrdemServico /></LayoutProtegido>} />
+          
           {/* Se digitar qualquer rota maluca, manda de volta pro login */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

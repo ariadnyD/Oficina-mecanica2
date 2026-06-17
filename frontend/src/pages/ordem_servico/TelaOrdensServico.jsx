@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import FormOrdemServico from './FormOrdemServico';
+import { Link } from 'react-router-dom';
 
 function TelaOrdensServico() {
   const [ordens, setOrdens] = useState([]);
@@ -93,7 +94,11 @@ function TelaOrdensServico() {
               ) : (
                 ordens.map(os => (
                   <tr key={os.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold', color: 'var(--accent)' }}>#{os.id}</td>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>
+                      <Link to={`/ordens-servico/${os.id}`} style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+                        #{os.id}
+                      </Link>
+                    </td>
                     <td style={{ padding: '12px' }}>{os.placa_veiculo}</td>
                     <td style={{ padding: '12px' }}>
                       <span style={{ 
