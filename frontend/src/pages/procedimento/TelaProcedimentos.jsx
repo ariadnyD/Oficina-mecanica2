@@ -9,6 +9,9 @@ function TelaProcedimentos() {
   const [termoBusca, setTermoBusca] = useState('');
   const [mensagem, setMensagem] = useState('');
 
+  // 👇 NOSSA CHAVE MÁGICA DE ADMIN (A mesma que usamos nas outras telas)
+  const isAdmin = localStorage.getItem('is_admin') === 'true';
+
   const carregarProcedimentos = async () => {
     try {
       const dados = await procedimentoServices.getProcedimentos();
@@ -110,13 +113,15 @@ function TelaProcedimentos() {
                 <th style={{ padding: '12px', textAlign: 'left' }}>Procedimento</th>
                 <th style={{ padding: '12px', textAlign: 'left' }}>Tempo Médio</th>
                 <th style={{ padding: '12px', textAlign: 'right' }}>Valor</th>
-                <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>
+                {/* 👇 Esconde o cabeçalho se não for Admin */}
+                {isAdmin && <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>}
               </tr>
             </thead>
             <tbody>
               {procedimentosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ padding: '20px', textAlign: 'center' }}>
+                  {/* 👇 Ajusta a quantidade de colunas que a mensagem ocupa */}
+                  <td colSpan={isAdmin ? "4" : "3"} style={{ padding: '20px', textAlign: 'center' }}>
                     {procedimentos.length === 0 ? "Nenhum procedimento cadastrado." : "Nenhum procedimento encontrado."}
                   </td>
                 </tr>
@@ -131,22 +136,26 @@ function TelaProcedimentos() {
                     <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>
                       R$ {parseFloat(proc.valor).toFixed(2)}
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => handleAbrirEdicao(proc)} 
-                        style={{ marginRight: '8px', padding: '5px 10px', cursor: 'pointer', backgroundColor: '#f0ad4e', border: 'none', borderRadius: '4px', color: '#fff' }}
-                      >
-                        Editar
-                      </button>
-                      {proc.is_active && (
+                    
+                    {/* 👇 Só renderiza a coluna e os botões se for Admin */}
+                    {isAdmin && (
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
                         <button 
-                          onClick={() => handleExcluir(proc.id, proc.nome)}
-                          style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
+                          onClick={() => handleAbrirEdicao(proc)} 
+                          style={{ marginRight: '8px', padding: '5px 10px', cursor: 'pointer', backgroundColor: '#f0ad4e', border: 'none', borderRadius: '4px', color: '#fff' }}
                         >
-                          Suspender
+                          Editar
                         </button>
-                      )}
-                    </td>
+                        {proc.is_active && (
+                          <button 
+                            onClick={() => handleExcluir(proc.id, proc.nome)}
+                            style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
+                          >
+                            Suspender
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
