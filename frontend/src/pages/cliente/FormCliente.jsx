@@ -33,7 +33,7 @@ function FormCliente({ aoCancelar, aoSalvarSucesso, clienteEmEdicao }) {
       const dadosCliente = { nome, cpf, data_nascimento: dataNascimento, endereco, telefone };
       
       if (clienteEmEdicao) {
-        await clienteServices.editarCliente(clienteEmEdicao.id, dadosCliente);
+        await clienteServices.editarCliente(clienteEmEdicao.cpf, dadosCliente);
       } else {
         await clienteServices.cadastrarCliente(dadosCliente);
       }
