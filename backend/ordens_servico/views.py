@@ -2,9 +2,10 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.http import Http404
-from django.db import transaction # 👇 ADICIONADO PARA A MÁGICA DO ESTOQUE
-from .models import OrdemServico
+from django.db import transaction 
+from .models import OrdemServico, ItemInsumoOS
 from .serializers import OrdemServicoSerializer
+from django.utils import timezone
 
 class OrdemServicoViewSet(viewsets.ModelViewSet):
     # 👇 Adicionei o order_by para as OS mais recentes aparecerem primeiro
@@ -72,20 +73,43 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
             "dados": serializer.data
         }, status=status.HTTP_200_OK)
     
-    # -------------------------------------------------------------
-    # 👇 A MÁGICA DO ESTOQUE (Inserida no seu código!)
-    # -------------------------------------------------------------
     def perform_update(self, serializer):
         os_antiga = self.get_object()
         status_antigo = os_antiga.status
 
+        # 1. Salva a OS e recria os itens (Chama o serializer)
         nova_os = serializer.save()
 
-        # Se mudou para FINALIZADA, debita do estoque
+        # -------------------------------------------------------------
+        # MÁGICA 1: DATA DE CONCLUSÃO AUTOMÁTICA
+        # -------------------------------------------------------------
+        if nova_os.status in ['CONCLUIDA', 'FINALIZADA'] and not nova_os.data_conclusao:
+            nova_os.data_conclusao = timezone.now() # Preenche com a data/hora atual
+            nova_os.save(update_fields=['data_conclusao'])
+            
+        # (Bônus) Se a OS for reaberta por engano, limpa a data de conclusão
+        elif nova_os.status in ['ABERTA', 'EM_EXECUCAO'] and nova_os.data_conclusao:
+            nova_os.data_conclusao = None
+            nova_os.save(update_fields=['data_conclusao'])
+
+        # -------------------------------------------------------------
+        # MÁGICA 2: CONTROLE DE ESTOQUE BLINDADO
+        # -------------------------------------------------------------
+        # Se foi finalizada agora, BAIXA o estoque
         if status_antigo != 'FINALIZADA' and nova_os.status == 'FINALIZADA':
             with transaction.atomic():
-                for item in nova_os.insumos.all():
+                # Forçamos a busca direto no Banco de Dados para fugir do Cache!
+                itens_da_os = ItemInsumoOS.objects.filter(ordem_servico=nova_os)
+                for item in itens_da_os:
                     insumo = item.insumo
                     insumo.quantidade -= item.quantidade_utilizada
                     insumo.save()
-    # -------------------------------------------------------------
+                    
+        # (Bônus) Se ela estava finalizada e você voltar para "ABERTA", DEVOLVE pro estoque!
+        elif status_antigo == 'FINALIZADA' and nova_os.status != 'FINALIZADA':
+            with transaction.atomic():
+                itens_da_os = ItemInsumoOS.objects.filter(ordem_servico=nova_os)
+                for item in itens_da_os:
+                    insumo = item.insumo
+                    insumo.quantidade += item.quantidade_utilizada
+                    insumo.save()

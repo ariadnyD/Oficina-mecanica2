@@ -33,38 +33,69 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
             'observacoes', 'procedimentos', 'insumos'
         ]
 
-    # Função que cria a OS e seus Itens juntos
+    # CRIAR OS COM ITENS
     def create(self, validated_data):
-        procedimentos_data = validated_data.pop('procedimentos', [])
-        insumos_data = validated_data.pop('insumos', [])
+        # 👇 AQUI ESTÁ A CORREÇÃO: Arranca as listas do validated_data para o Django não surtar!
+        validated_data.pop('procedimentos', None)
+        validated_data.pop('insumos', None)
+
+        # MÁGICA: Pega os dados brutos (initial_data)
+        procedimentos_data = self.initial_data.get('procedimentos', [])
+        insumos_data = self.initial_data.get('insumos', [])
         
+        # Cria a OS limpinha
         os = OrdemServico.objects.create(**validated_data)
 
+        # Associa os procedimentos
         for proc in procedimentos_data:
-            ItemProcedimentoOS.objects.create(ordem_servico=os, **proc)
+            ItemProcedimentoOS.objects.create(
+                ordem_servico=os, 
+                procedimento_id=proc.get('procedimento'), 
+                valor_cobrado=proc.get('valor_cobrado')
+            )
 
+        # Associa os insumos
         for ins in insumos_data:
-            ItemInsumoOS.objects.create(ordem_servico=os, **ins)
+            ItemInsumoOS.objects.create(
+                ordem_servico=os, 
+                insumo_id=ins.get('insumo'), 
+                quantidade_utilizada=ins.get('quantidade_utilizada')
+            )
 
         return os
 
-    # Função que atualiza a OS e recria os itens
+    # ATUALIZAR OS SEM PERDER OS ITENS
     def update(self, instance, validated_data):
-        procedimentos_data = validated_data.pop('procedimentos', None)
-        insumos_data = validated_data.pop('insumos', None)
+        # 👇 CORREÇÃO AQUI TAMBÉM: Arranca as listas
+        validated_data.pop('procedimentos', None)
+        validated_data.pop('insumos', None)
 
+        procedimentos_data = self.initial_data.get('procedimentos', None)
+        insumos_data = self.initial_data.get('insumos', None)
+
+        # Salva as atualizações dos campos básicos da OS (status, valor, etc)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
+        # Recria os procedimentos forçadamente
         if procedimentos_data is not None:
             instance.procedimentos.all().delete()
             for proc in procedimentos_data:
-                ItemProcedimentoOS.objects.create(ordem_servico=instance, **proc)
+                ItemProcedimentoOS.objects.create(
+                    ordem_servico=instance, 
+                    procedimento_id=proc.get('procedimento'), 
+                    valor_cobrado=proc.get('valor_cobrado')
+                )
 
+        # Recria os insumos forçadamente
         if insumos_data is not None:
             instance.insumos.all().delete()
             for ins in insumos_data:
-                ItemInsumoOS.objects.create(ordem_servico=instance, **ins)
+                ItemInsumoOS.objects.create(
+                    ordem_servico=instance, 
+                    insumo_id=ins.get('insumo'), 
+                    quantidade_utilizada=ins.get('quantidade_utilizada')
+                )
 
         return instance
