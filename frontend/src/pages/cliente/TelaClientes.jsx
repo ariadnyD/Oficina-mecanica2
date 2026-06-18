@@ -32,9 +32,16 @@ function TelaClientes() {
   };
 
   const handleExcluir = async (cpf, nome) => {
+    // Verifica se o CPF existe antes de avançar
+    if (!cpf) {
+      alert("Erro: Não foi possível identificar o CPF do cliente para exclusão.");
+      return;
+    }
+
     const confirmacao = window.confirm(`Tem certeza que deseja excluir o cliente ${nome}?`);
     if (confirmacao) {
       try {
+        // Certifique-se de que o clienteServices.excluirCliente aceita o cpf como argumento
         const resposta = await clienteServices.excluirCliente(cpf);
         alert(resposta.mensagem || "Cliente desativado com sucesso!");
         carregarClientes();
@@ -125,7 +132,7 @@ function TelaClientes() {
                 clientesFiltrados.map((cliente) => (
                   <tr key={cliente.cpf} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '12px' }}>
-                      <Link to={`/clientes/${cliente.cpf}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
+                      <Link to={`/clientes/${cliente.id}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
                         {cliente.nome}
                       </Link>
                     </td>

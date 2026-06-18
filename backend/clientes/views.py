@@ -31,19 +31,17 @@ class ClienteViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         cpf_informado = request.data.get('cpf')
 
-        # -----------------------------------------------------------------
-        # MÁGICA 1: A gente intercepta o CPF antes do Serializer chiar
-        # -----------------------------------------------------------------
-        from .models import Cliente # Garante que o model será lido
+        # Intercepta o CPF antes do Serializer validar
+        from .models import Cliente 
         cliente_existente = Cliente.objects.filter(cpf=cpf_informado).first()
 
         if cliente_existente:
             if not cliente_existente.is_active:
-                # O cliente existe e está "deletado". Mandamos o "Sinal de Fumaça" pro React!
+                # O cliente existe e está "deletado". Mandamos o CPF correto para o React reativar
                 return Response({
                     "mensagem": "Este CPF pertence a um cliente inativo. Deseja reativar o cadastro?",
-                    "inativo": True, # A nossa flag especial para o React
-                    "cliente_id": cliente_existente.id # Mandamos o ID pra ele saber quem reativar
+                    "inativo": True, 
+                    "cliente_id": cliente_existente.cpf  # CORRIGIDO: Agora envia o CPF em vez de ID inexistente
                 }, status=status.HTTP_409_CONFLICT) 
             else:
                 # O cliente existe e já tá ativo, dá erro normal.
@@ -51,9 +49,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
                     "mensagem": "Erro: Já existe um cliente ativo cadastrado com este CPF."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-        # -----------------------------------------------------------------
-        # Se não caiu em nenhum if ali em cima, segue o baile do cadastro normal
-        # -----------------------------------------------------------------
+        # Cadastro normal se não houver duplicidade
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
@@ -102,19 +98,16 @@ class ClienteViewSet(viewsets.ModelViewSet):
         except Exception:
             return Response({"erro": "Erro: Não foi possível excluir o cliente."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # -----------------------------------------------------------------
-    # MÁGICA 2: A Rota Especial para "Ressuscitar" o cliente
-    # -----------------------------------------------------------------
+    # Rota Especial para Reativar o cliente
     @action(detail=True, methods=['patch'])
     def reativar(self, request, pk=None):
         from .models import Cliente
         try:
-            # Aqui temos que buscar direto no banco (.objects.get), 
-            # pois o get_object() normal ignoraria os inativos
+            # Busca direto no banco porque get_object ignora os inativos
             cliente = Cliente.objects.get(pk=pk)
             cliente.is_active = True
             
-            # Se quiser, podemos aproveitar e salvar as informações novas que vieram no formulário
+            # Atualiza dados vindos do formulário se existirem
             if 'nome' in request.data: cliente.nome = request.data['nome']
             if 'telefone' in request.data: cliente.telefone = request.data['telefone']
             if 'endereco' in request.data: cliente.endereco = request.data['endereco']
