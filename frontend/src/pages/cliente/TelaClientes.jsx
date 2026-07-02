@@ -132,7 +132,7 @@ function TelaClientes() {
                 clientesFiltrados.map((cliente) => (
                   <tr key={cliente.cpf} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '12px' }}>
-                      <Link to={`/clientes/${cliente.id}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
+                      <Link to={`/clientes/${cliente.cpf}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
                         {cliente.nome}
                       </Link>
                     </td>
