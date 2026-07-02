@@ -51,19 +51,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  background-color: var(--social-bg);
+  padding: 17px 32px;
+  background-color: #03346e;
   border-bottom: 1px solid var(--border);
   margin-bottom: 20px;
 }
 
 .header-title {
-  font-size: 30px;
+  font-size: 32px;
+  color: white;
 }
 
 .btn-logout {
   padding: 8px 15px;
-  background-color: orange;
+  background-color: #ff5c00;
   color: white;
   border: none;
   border-radius: 4px;
@@ -86,17 +87,27 @@
   align-items: center;
   height: 100vh;      /* Ocupa 100% da altura da tela */
   overflow: hidden;   /* Evita qualquer scroll */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("../public/ford.jpeg");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 .login-container {
   width: 100%;
-  max-width: 400px;
-  padding: 30px;
-  border: 1px solid var(--border, #ccc);
+  max-width: 450px;
+  padding: 32px;
+  border: 5px solid var(--border, #ccc);
   border-radius: 12px; /* Borda bem arredondada, como você pediu */
   background-color: #ffffff;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Sombra suave para destacar o quadro */
   box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.75); /* Fundo escuro com 75% de opacidade */
+  backdrop-filter: blur(8px);         /* MÁGICA: Desfoca a foto do motor apenas atrás da caixa */
+  -webkit-backdrop-filter: blur(8px); /* Para funcionar no Safari */
+  border: 1px solid rgba(192, 132, 252, 0.3); /* Uma borda roxa bem suave */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5); /* Sombra um pouco maior para a caixa flutuar */
 }
 
 .login-title {
@@ -124,12 +135,12 @@
 
 .login-input:focus {
   outline: none;
-  border-color: orange;
+  border-color: #ff5c00;
 }
 
 .login-button {
   padding: 12px;
-  background-color: orange;
+  background-color: #ff5c00;
   color: white;
   border: none;
   border-radius: 6px;
@@ -166,49 +177,6 @@
 }
 
 /* =========================================
-   ESTILOS DO PAINEL PRINCIPAL (HOME)
-========================================= */
-
-.painel-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* Calcula 100% da tela menos a altura do header (aprox 70px) para centralizar perfeito */
-  height: calc(100vh - 70px); 
-  overflow: hidden; 
-}
-
-/* Centraliza os botões no meio da tela APENAS no Dashboard */
-.nav-centered {
-  min-height: calc(90vh - 80px); /* Pega a altura da tela toda menos o cabeçalho */
-  align-items: center; /* Centraliza verticalmente */
-  margin-bottom: 0;
-}
-
-/* Opcional: margem nas laterais do conteúdo para ele não colar nas bordas */
-.conteudo-principal {
-  padding: 0 20px 20px 20px;
-}
-
-/* Centralização e estilo da mensagem da tela de Dashboard */
-.dashboard-welcome {
-  text-align: center;
-  margin-top: 60px;
-  color: var(--accent, #333);
-  font-family: sans-serif;
-}
-
-.dashboard-welcome h2 {
-  font-size: 26px;
-  margin-bottom: 10px;
-}
-
-.dashboard-welcome p {
-  color: #666;
-  font-size: 16px;
-}
-
-/* =========================================
    ALINHAMENTO CENTRALIZADO DO DASHBOARD
 ========================================= */
 
@@ -222,10 +190,12 @@
   width: 100%;
   box-sizing: border-box;
   padding: 20px;
+
 }
 
 .dashboard-welcome-box {
   margin-bottom: 35px; /* Empurra os botões para baixo, mantendo o texto acima deles */
+
 }
 
 .dashboard-welcome-box h2 {
@@ -233,10 +203,10 @@
   font-weight: bold;
   color: var(--text-h, #08060d);
   margin-bottom: 8px;
+
 }
 
 .dashboard-welcome-box p {
   font-size: 16px;
   color: #666;
 }
-

@@ -91,14 +91,16 @@ function LayoutProtegido({ children }) {
 
       {isDashboard ? (
         /* SE FOR O DASHBOARD: Mensagem no Topo, Botões logo Abaixo, tudo Centralizado no meio da tela */
-        <div className="dashboard-centered-container">
-          <div className="dashboard-welcome-box">
-            <h2>Olá, {nomeUsuario}!</h2>
-            <p>Clicando nesses botões navegue entre os módulos</p>
+        <div>
+          <div className="dashboard-centered-container">
+            <div className="dashboard-welcome-box">
+              <h2>Olá, {nomeUsuario}!</h2>
+              <p>Clicando nesses botões navegue entre os módulos</p>
+            </div>
+            <nav className="nav-container">
+              {botoesMenu}
+            </nav>
           </div>
-          <nav className="nav-container">
-            {botoesMenu}
-          </nav>
         </div>
       ) : (
         /* SE FOR OUTRA TELA: Mantém botões no topo padrão e abre espaço para as tabelas embaixo */

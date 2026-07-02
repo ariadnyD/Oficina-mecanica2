@@ -20,7 +20,7 @@ function TelaVeiculos() {
       const dados = await veiculoServices.getVeiculos(filtros);
       setVeiculos(dados);
     } catch (erro) {
-      console.error("Erro ao carregar os veículos.", erro);
+      console.error("Erro ao carregar os veículos.", erro);lo
     }
   };
 
