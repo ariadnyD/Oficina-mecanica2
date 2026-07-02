@@ -22,6 +22,9 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
     placa_veiculo = serializers.ReadOnlyField(source='veiculo.placa')
     nome_cliente = serializers.ReadOnlyField(source='veiculo.cliente.nome')
 
+    # 👈 GARANTE QUE O DRF ACEITE O VALOR VINDO DO FRONTEND SEM REGRAS ENGESSADAS
+    valor_total = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+
     class Meta:
         model = OrdemServico
         fields = [
@@ -35,10 +38,10 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
         validated_data.pop('procedimentos', None)
         validated_data.pop('insumos', None)
 
-        # 2. Resgatamos os dados puros enviados pelo React
         procedimentos_data = self.initial_data.get('procedimentos', [])
         insumos_data = self.initial_data.get('insumos', [])
         
+        # Cria a OS respeitando o valor_total digitado pelo usuário no React
         os = OrdemServico.objects.create(**validated_data)
 
         for proc in procedimentos_data:
@@ -50,7 +53,7 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
 
         for ins in insumos_data:
             ItemInsumoOS.objects.create(
-                ordem_servico=os,
+                ordem_servico=os, 
                 insumo_id=ins.get('insumo'), 
                 quantidade_utilizada=ins.get('quantidade_utilizada', 1)
             )
@@ -58,20 +61,19 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
         return os
 
     def update(self, instance, validated_data):
-        # 1. A RAIZ DO ERRO: Arrancamos as listas do validated_data para o setattr não surtar
+        # 1. Arrancamos as listas do validated_data para o setattr não surtar
         validated_data.pop('procedimentos', None)
         validated_data.pop('insumos', None)
 
-        # 2. Pegamos os dados puros do React direto da fonte, imunes à validação do DRF
         procedimentos_data = self.initial_data.get('procedimentos', None)
         insumos_data = self.initial_data.get('insumos', None)
 
-        # 3. Atualizamos só os campos normais (veículo, valor_total, status)
+        # 2. Atualizamos os campos normais (incluindo o valor_total digitado manualmente)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        # 4. Refazemos os procedimentos manualmente, forçando o ID cru no banco
+        # 3. Refazemos os procedimentos manualmente
         if procedimentos_data is not None:
             instance.procedimentos.all().delete()
             for proc in procedimentos_data:
@@ -81,7 +83,7 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
                     valor_cobrado=proc.get('valor_cobrado', 0)
                 )
 
-        # 5. Refazemos os insumos manualmente, forçando o ID cru no banco
+        # 4. Refazemos os insumos manualmente
         if insumos_data is not None:
             instance.insumos.all().delete()
             for ins in insumos_data:

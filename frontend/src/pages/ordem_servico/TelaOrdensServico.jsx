@@ -78,9 +78,9 @@ function TelaOrdensServico() {
           <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}>
             <thead>
               <tr style={{ backgroundColor: 'var(--social-bg)', borderBottom: '2px solid var(--border)' }}>
-                <th style={{ padding: '12px', textAlign: 'left' }}>OS</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Placa/Veículo</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Status</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Código</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Placa do veículo</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Situação</th>
                 {isAdmin && <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>}
               </tr>
             </thead>
@@ -125,7 +125,7 @@ function TelaOrdensServico() {
                           onClick={() => handleExcluir(os.id)}
                           style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
                         >
-                          Cancelar
+                          Excluir
                         </button>
                       </td>
                     )}

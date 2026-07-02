@@ -220,12 +220,30 @@ function FormOrdemServico({ aoCancelar, aoSalvarSucesso, osEmEdicao }) {
         </ul>
       </div>
 
-      {/* Área Financeira Nova */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', padding: '15px', backgroundColor: 'var(--bg)', borderRadius: '6px', marginBottom: '20px', border: '1px solid var(--border)' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Forma de Pagamento:</label>
-          <select value={formData.forma_pagamento} onChange={(e) => setFormData({...formData, forma_pagamento: e.target.value})} style={{ width: '100%', padding: '8px' }}>
-            <option value="">Ainda não pago...</option>
+      
+      {/* SEÇÃO FINANCEIRA: FORMA DE PAGAMENTO + VALOR TOTAL EDITÁVEL */}
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+  
+        {/* Campo: Forma de Pagamento */}
+        <div style={{ flex: 1 }}>
+          <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text)', fontWeight: 'bold' }}>
+            Forma de Pagamento:
+          </label>
+          <select 
+            value={formData.forma_pagamento || ''} 
+            onChange={(e) => setFormData({...formData, forma_pagamento: e.target.value})} 
+            style={{ 
+              width: '100%', 
+              padding: '8px', 
+              boxSizing: 'border-box', 
+              backgroundColor: 'var(--bg)', 
+              color: 'var(--text)', 
+              border: '1px solid var(--border)', 
+              borderRadius: '4px',
+              fontSize: '16px'
+            }}
+          >
+            <option value="">Ainda não pago / Pendente</option>
             <option value="PIX">Pix</option>
             <option value="DINHEIRO">Dinheiro</option>
             <option value="CARTAO_CREDITO">Cartão de Crédito</option>
@@ -233,11 +251,33 @@ function FormOrdemServico({ aoCancelar, aoSalvarSucesso, osEmEdicao }) {
           </select>
         </div>
 
-        <div style={{ textAlign: 'right' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Valor Total Calculado:</label>
-          <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent)' }}>R$ {formData.valor_total}</span>
+        {/* Campo: Valor Total Manual */}
+        <div style={{ flex: 1 }}>
+          <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text)', fontWeight: 'bold' }}>
+            Valor Total (R$):
+          </label>
+          <input 
+            type="number" 
+            step="0.01" 
+            min="0"
+            placeholder="0.00"
+            value={formData.valor_total} 
+            onChange={(e) => setFormData({ ...formData, valor_total: e.target.value })} 
+            style={{ 
+              width: '100%', 
+              padding: '8px', 
+              boxSizing: 'border-box', 
+              backgroundColor: 'var(--bg)', 
+              color: 'var(--text)', 
+              border: '1px solid var(--border)', 
+              borderRadius: '4px',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }} 
+          />
         </div>
-      </div>
+
+    </div>
 
       {/* Observações */}
       <div style={{ marginBottom: '20px' }}>
