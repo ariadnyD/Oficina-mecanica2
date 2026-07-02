@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom'; // 👈 Importado o Link para navegação
+import { useSearchParams, Link } from 'react-router-dom';
 import veiculoServices from '../../services/veiculoServices';
 import FormVeiculo from './FormVeiculo'; 
 
@@ -40,78 +40,113 @@ function TelaVeiculos() {
   };
 
   const handleExcluir = async (id, placa) => {
-    const confirmacao = window.confirm(`Tem certeza que deseja excluir o veículo de placa ${placa}?`);
-    if (confirmacao) {
+    if (!id) {
+      alert("Erro: Não foi possível identificar o ID do veículo para exclusão.");
+      return;
+    }
+    
+    if (window.confirm(`Tem certeza que deseja excluir o veículo de placa "${placa}"?`)) {
       try {
-        await veiculoServices.excluirVeiculo(id);
-        carregarVeiculos();
+        // MUDE ESTA LINHA ABAIXO PARA O NOME EM PORTUGUÊS 
+        await veiculoServices.excluirVeiculo(id); 
+        
+        alert("Veículo excluído com sucesso!");
+        carregarVeiculos(); // Atualiza a tabela na hora
       } catch (erro) {
-        console.error("Erro ao excluir veículo", erro);
+        console.error("Erro completo:", erro);
+        alert("Erro ao excluir veículo.");
       }
     }
   };
 
-  const veiculosFiltrados = veiculos.filter(veiculo => 
-    veiculo.placa.toLowerCase().includes(termoBusca.toLowerCase()) ||
-    veiculo.modelo.toLowerCase().includes(termoBusca.toLowerCase())
-  );
+  const veiculosFiltrados = veiculos.filter(veiculo => {
+    const termo = termoBusca.toLowerCase();
+    return (
+      (veiculo.placa && veiculo.placa.toLowerCase().includes(termo)) ||
+      (veiculo.marca && veiculo.marca.toLowerCase().includes(termo)) ||
+      (veiculo.modelo && veiculo.modelo.toLowerCase().includes(termo)) ||
+      (veiculo.cliente_nome && veiculo.cliente_nome.toLowerCase().includes(termo))
+    );
+  });
 
   return (
-    <div style={{ padding: '20px', color: 'var(--text)' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>
+      
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Gerenciamento de Veículos</h2>
+        <h2>Módulo de Veículos</h2>
+        
         {!exibirFormulario && (
           <button 
-            onClick={() => { setVeiculoEmEdicao(null); setExibirFormulario(true); }}
-            style={{ padding: '10px 15px', backgroundColor: '#5cb85c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            onClick={() => {
+              setVeiculoEmEdicao(null);
+              setExibirFormulario(true);
+            }}
+            style={{ padding: '10px 15px', backgroundColor: 'var(--text-h)', color: 'var(--bg)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
           >
-            Cadastrar Novo Veículo
+            + Cadastrar Novo Veículo
           </button>
         )}
       </div>
 
-      {exibirFormulario ? (
-        <FormVeiculo 
-          aoCancelar={() => { setExibirFormulario(false); setVeiculoEmEdicao(null); }}
-          aoSalvarSucesso={handleSalvarSucesso}
-          veiculoEmEdicao={veiculoEmEdicao}
-        />
-      ) : (
-        <div>
-          <div style={{ marginBottom: '15px' }}>
-            <input 
-              type="text" 
-              placeholder="Buscar por placa ou modelo..." 
-              value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
-              style={{ padding: '8px', width: '300px', backgroundColor: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '4px' }}
-            />
-          </div>
+      {!exibirFormulario && (
+        <div style={{ marginBottom: '20px' }}>
+          <input 
+            type="text" 
+            placeholder="🔍 Buscar veículo por placa, marca, modelo ou proprietário..." 
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '12px 15px', 
+              borderRadius: '8px', 
+              border: '1px solid var(--border)', 
+              backgroundColor: 'var(--social-bg)',
+              color: 'var(--text)',
+              fontSize: '16px',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+      )}
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--bg-card)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+      {exibirFormulario && (
+        <FormVeiculo 
+          veiculoEmEdicao={veiculoEmEdicao} 
+          onSalvarSucesso={handleSalvarSucesso}
+          aoCancelar={() => {
+            setExibirFormulario(false);
+            setVeiculoEmEdicao(null);
+          }}
+        />
+      )}
+
+      {!exibirFormulario && (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}>
             <thead>
-              <tr style={{ backgroundColor: 'var(--border)', textAlign: 'left' }}>
-                <th style={{ padding: '12px' }}>Placa</th>
-                <th style={{ padding: '12px' }}>Modelo</th>
-                <th style={{ padding: '12px' }}>Proprietário</th>
+              <tr style={{ backgroundColor: 'var(--social-bg)', borderBottom: '2px solid var(--border)' }}>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Placa</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Modelo / Marca</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Proprietário</th>
                 {isAdmin && <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>}
               </tr>
             </thead>
             <tbody>
               {veiculosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 4 : 3} style={{ padding: '20px', textAlign: 'center', color: 'var(--text)' }}>Nenhum veículo encontrado.</td>
+                  <td colSpan={isAdmin ? "4" : "3"} style={{ padding: '20px', textAlign: 'center' }}>
+                    {veiculos.length === 0 ? "Nenhum veículo cadastrado." : "Nenhum veículo encontrado na busca."}
+                  </td>
                 </tr>
               ) : (
                 veiculosFiltrados.map((veiculo) => (
                   <tr key={veiculo.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold' }}>
-                      {/* 👈 LINK CLICÁVEL NA PLACA */}
-                      <Link to={`/veiculos/${veiculo.id}`} style={{ color: '#0275d8', textDecoration: 'none' }}>
-                        {veiculo.placa}
+                    <td style={{ padding: '12px' }}>
+                      <Link to={`/veiculos/${veiculo.id}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
+                        {veiculo.placa ? veiculo.placa.toUpperCase() : 'SEM PLACA'}
                       </Link>
                     </td>
-                    <td style={{ padding: '12px' }}>{veiculo.marca} {veiculo.modelo}</td>
+                    <td style={{ padding: '12px' }}>{veiculo.marca} - {veiculo.modelo}</td>
                     <td style={{ padding: '12px' }}>{veiculo.cliente_nome || veiculo.cliente?.nome || 'Não informado'}</td>
                     
                     {isAdmin && (

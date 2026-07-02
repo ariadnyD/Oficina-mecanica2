@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import veiculoServices from '../../services/veiculoServices'; 
 
-function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veiculoEmEdicao }) {
+function FormVeiculo({ aoCancelar, onSalvarSucesso, clientePreSelecionado, veiculoEmEdicao }) {
   const [placa, setPlaca] = useState('');
   const [marca, setMarca] = useState('');
   const [modelo, setModelo] = useState('');
@@ -9,7 +9,8 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
   const [cor, setCor] = useState('');
   const [ano, setAno] = useState('');
   const [cpfDono, setCpfDono] = useState('');
-  // NOVA CAIXA: Para garantir que o ID do cliente da edição seja mantido
+  
+  // Para garantir que o ID do cliente da edição seja mantido
   const [idClienteEdicao, setIdClienteEdicao] = useState(null);
   
   const [mensagem, setMensagem] = useState('');
@@ -23,7 +24,6 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
       setTipo(veiculoEmEdicao.tipo || '');
       setCor(veiculoEmEdicao.cor || '');
       setAno(veiculoEmEdicao.ano || '');
-      // MÁGICA: Captura o ID do cliente que veio no objeto veiculoEmEdicao
       setIdClienteEdicao(veiculoEmEdicao.cliente || null);
     }
   }, [veiculoEmEdicao]);
@@ -33,11 +33,11 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
     setMensagem('');
     setErrosCampos({});
 
-    // Prioridade de quem é o dono:
-    // 1. Veio via link (clientePreSelecionado)?
-    // 2. É uma edição (usa o idClienteEdicao que salvamos no useEffect)?
-    // 3. Digitou o CPF na mão (cpfDono)?
-    const idClienteFinal = clientePreSelecionado || idClienteEdicao || cpfDono;
+    // Arranca tudo que não for número (pontos, traços, espaços) do CPF digitado
+    const cpfLimpo = cpfDono ? cpfDono.replace(/\D/g, '') : '';
+    
+    // Agora usamos o cpfLimpo em vez do cpfDono puro
+    const idClienteFinal = clientePreSelecionado || idClienteEdicao || cpfLimpo;
 
     if (!placa || !marca || !modelo || !tipo || !cor || !ano || !idClienteFinal) {
       setMensagem("Por favor, preencha todos os campos obrigatórios.");
@@ -61,11 +61,26 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
         await veiculoServices.cadastrarVeiculo(dadosVeiculo);
       }
       
-      aoSalvarSucesso(); 
+      onSalvarSucesso(); 
+      
     } catch (erro) {
-      setMensagem(erro.erro || "Erro ao salvar veículo.");
-      if (erro.detalhes) {
-        setErrosCampos(erro.detalhes);
+      console.error("Erro completo do backend:", erro);
+      
+      // Captura e exibe o erro exato que o Django devolveu
+      if (erro.response && erro.response.data) {
+        const msgs = Object.entries(erro.response.data)
+          .map(([campo, msg]) => `${campo.toUpperCase()}: ${msg}`)
+          .join(' | ');
+        setMensagem(`Erro do Servidor ➔ ${msgs}`);
+      } 
+      else if (erro.detalhes && typeof erro.detalhes === 'object') {
+        const msgs = Object.entries(erro.detalhes)
+          .map(([campo, msg]) => `${campo.toUpperCase()}: ${msg}`)
+          .join(' | ');
+        setMensagem(`Erro ➔ ${msgs}`);
+      } 
+      else {
+        setMensagem(erro.erro || erro.message || "Erro desconhecido ao guardar veículo.");
       }
     }
   };
@@ -82,7 +97,6 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
       <form onSubmit={handleSubmeter}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
           
-          {/* Só pede o CPF se não for edição e não veio via link */}
           {!clientePreSelecionado && !veiculoEmEdicao && (
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ display: 'block', marginBottom: '5px' }}>CPF do Cliente:</label>
@@ -122,7 +136,7 @@ function FormVeiculo({ aoCancelar, aoSalvarSucesso, clientePreSelecionado, veicu
         </div>
 
         <button type="submit" style={{ padding: '10px 15px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', fontWeight: 'bold' }}>
-          {veiculoEmEdicao ? "Salvar Alterações" : "Salvar Veículo"}
+          {veiculoEmEdicao ? "Guardar Alterações" : "Guardar Veículo"}
         </button>
       </form>
     </div>

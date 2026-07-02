@@ -58,12 +58,12 @@
 }
 
 .header-title {
-  font-weight: bold;
+  font-size: 30px;
 }
 
 .btn-logout {
   padding: 8px 15px;
-  background-color: #d9534f;
+  background-color: orange;
   color: white;
   border: none;
   border-radius: 4px;
@@ -73,5 +73,170 @@
 }
 
 .btn-logout:hover {
-  background-color: #c9302c;
+  transform: scale(0.95);
 }
+
+/* =========================================
+   ESTILOS DA TELA DE LOGIN
+========================================= */
+
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;      /* Ocupa 100% da altura da tela */
+  overflow: hidden;   /* Evita qualquer scroll */
+}
+
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 30px;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 12px; /* Borda bem arredondada, como você pediu */
+  background-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Sombra suave para destacar o quadro */
+  box-sizing: border-box;
+}
+
+.login-title {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 40px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 15px;
+  margin-top: 5px; /* Dá um espacinho entre a label e o input */
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: orange;
+}
+
+.login-button {
+  padding: 12px;
+  background-color: orange;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 10px;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.login-button:hover {
+  opacity: 0.9;
+}
+
+.login-button:active {
+  transform: scale(0.98); /* Dá um efeitinho de "clique" no botão */
+}
+
+.login-message {
+  margin-top: 20px;
+  text-align: center;
+  font-weight: bold;
+  color: var(--accent, #007bff);
+}
+
+/* Remove a estilização padrão de link do título no topo esquerdo */
+.header-logo-link {
+  text-decoration: none;
+  color: inherit; 
+}
+
+.header-logo-link:hover {
+  opacity: 0.8; /* Dá um feedback visual discreto ao passar o mouse */
+}
+
+/* =========================================
+   ESTILOS DO PAINEL PRINCIPAL (HOME)
+========================================= */
+
+.painel-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Calcula 100% da tela menos a altura do header (aprox 70px) para centralizar perfeito */
+  height: calc(100vh - 70px); 
+  overflow: hidden; 
+}
+
+/* Centraliza os botões no meio da tela APENAS no Dashboard */
+.nav-centered {
+  min-height: calc(90vh - 80px); /* Pega a altura da tela toda menos o cabeçalho */
+  align-items: center; /* Centraliza verticalmente */
+  margin-bottom: 0;
+}
+
+/* Opcional: margem nas laterais do conteúdo para ele não colar nas bordas */
+.conteudo-principal {
+  padding: 0 20px 20px 20px;
+}
+
+/* Centralização e estilo da mensagem da tela de Dashboard */
+.dashboard-welcome {
+  text-align: center;
+  margin-top: 60px;
+  color: var(--accent, #333);
+  font-family: sans-serif;
+}
+
+.dashboard-welcome h2 {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.dashboard-welcome p {
+  color: #666;
+  font-size: 16px;
+}
+
+/* =========================================
+   ALINHAMENTO CENTRALIZADO DO DASHBOARD
+========================================= */
+
+.dashboard-centered-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 140px); /* Ocupa o centro vertical da tela descontando o cabeçalho */
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+.dashboard-welcome-box {
+  margin-bottom: 35px; /* Empurra os botões para baixo, mantendo o texto acima deles */
+}
+
+.dashboard-welcome-box h2 {
+  font-size: 34px;
+  font-weight: bold;
+  color: var(--text-h, #08060d);
+  margin-bottom: 8px;
+}
+
+.dashboard-welcome-box p {
+  font-size: 16px;
+  color: #666;
+}
+
