@@ -2,18 +2,21 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.http import Http404
-from .models import OrdemServico
+from django.db import transaction 
+from .models import OrdemServico, ItemInsumoOS
 from .serializers import OrdemServicoSerializer
+from django.utils import timezone
 
 class OrdemServicoViewSet(viewsets.ModelViewSet):
-    queryset = OrdemServico.objects.all()
+    # 👇 Adicionei o order_by para as OS mais recentes aparecerem primeiro
+    queryset = OrdemServico.objects.all().order_by('-data_abertura')
     serializer_class = OrdemServicoSerializer
 
     def get_object(self):
         try:
             return super().get_object()
         except Http404:
-            raise Http404("Erro: A Ordem de Serviço informada não está cadastrado ou encontra-se suspenso.")
+            raise Http404("Erro: A Ordem de Serviço informada não está cadastrada ou encontra-se suspensa.")
         
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -62,6 +65,7 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
                 "detalhes": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        # Aqui o seu código já chama o perform_update, então a mágica do estoque vai rodar!
         self.perform_update(serializer)
         
         return Response({
@@ -69,21 +73,43 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
             "dados": serializer.data
         }, status=status.HTTP_200_OK)
     
-    def destroy(self, request, *args, **kwargs):
-        try:
-            instance = self.get_object()
-        except Http404 as e:
-            return Response({"erro": "Erro: A Ordem de Serviço informada não existe."}, status=status.HTTP_404_NOT_FOUND)
-        
-        try:
-            # Em vez de deletar, nós mudamos o status para 'cancelado' e salvamos
-            instance.status = 'cancelado'
-            instance.save()
+    def perform_update(self, serializer):
+        os_antiga = self.get_object()
+        status_antigo = os_antiga.status
+
+        # 1. Salva a OS e recria os itens (Chama o serializer)
+        nova_os = serializer.save()
+
+        # -------------------------------------------------------------
+        # MÁGICA 1: DATA DE CONCLUSÃO AUTOMÁTICA
+        # -------------------------------------------------------------
+        if nova_os.status in ['CONCLUIDA', 'FINALIZADA'] and not nova_os.data_conclusao:
+            nova_os.data_conclusao = timezone.now() # Preenche com a data/hora atual
+            nova_os.save(update_fields=['data_conclusao'])
             
-            return Response({"mensagem": "A Ordem de Serviço foi cancelada com sucesso!"}, status=status.HTTP_200_OK)
-            
-        except Exception:
-            return Response(
-                {"erro": "Erro: Não foi possível cancelar a Ordem de Serviço devido a uma instabilidade no sistema. Tente novamente."}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # (Bônus) Se a OS for reaberta por engano, limpa a data de conclusão
+        elif nova_os.status in ['ABERTA', 'EM_EXECUCAO'] and nova_os.data_conclusao:
+            nova_os.data_conclusao = None
+            nova_os.save(update_fields=['data_conclusao'])
+
+        # -------------------------------------------------------------
+        # MÁGICA 2: CONTROLE DE ESTOQUE BLINDADO
+        # -------------------------------------------------------------
+        # Se foi finalizada agora, BAIXA o estoque
+        if status_antigo != 'FINALIZADA' and nova_os.status == 'FINALIZADA':
+            with transaction.atomic():
+                # Forçamos a busca direto no Banco de Dados para fugir do Cache!
+                itens_da_os = ItemInsumoOS.objects.filter(ordem_servico=nova_os)
+                for item in itens_da_os:
+                    insumo = item.insumo
+                    insumo.quantidade -= item.quantidade_utilizada
+                    insumo.save()
+                    
+        # (Bônus) Se ela estava finalizada e você voltar para "ABERTA", DEVOLVE pro estoque!
+        elif status_antigo == 'FINALIZADA' and nova_os.status != 'FINALIZADA':
+            with transaction.atomic():
+                itens_da_os = ItemInsumoOS.objects.filter(ordem_servico=nova_os)
+                for item in itens_da_os:
+                    insumo = item.insumo
+                    insumo.quantidade += item.quantidade_utilizada
+                    insumo.save()

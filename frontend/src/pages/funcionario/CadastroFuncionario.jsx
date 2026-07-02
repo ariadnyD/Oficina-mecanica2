@@ -18,26 +18,71 @@ function CadastroFuncionario() {
       setMensagem('Funcionário cadastrado com sucesso!');
       setUsername('');
       setPassword('');
+      setIsStaff(false);
     } catch (erro) {
       setMensagem('Erro ao cadastrar. Verifique se você está logada como Admin.');
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '20px auto', padding: '20px', border: '1px solid var(--border)' }}>
-      <h2>Cadastro de Funcionário</h2>
-      <form onSubmit={handleCadastro} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <input type="text" placeholder="Usuário" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <label>
-          <input type="checkbox" checked={isStaff} onChange={(e) => setIsStaff(e.target.checked)} />
-          É Administrador?
-        </label>
-        <button type="submit" style={{ backgroundColor: '#5cb85c', color: 'white', padding: '10px', border: 'none', cursor: 'pointer' }}>
-          Cadastrar
-        </button>
-      </form>
-      {mensagem && <p>{mensagem}</p>}
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      minHeight: 'calc(100vh - 260px)', // Pega o espaço que sobra abaixo dos botões e centraliza perfeitamente
+      padding: '20px',
+      boxSizing: 'border-box'
+    }}>
+      {/* Usando a mesma estrutura estética da caixinha de login */}
+      <div className="login-container" style={{ margin: 0, width: '100%', maxWidth: '400px' }}>
+        <h2 className="login-title">Cadastro de Funcionário</h2>
+        
+        <form onSubmit={handleCadastro} className="login-form">
+          <div>
+            <label>Usuário:</label>
+            <input 
+              type="text" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
+              className="login-input"
+              required 
+            />
+          </div>
+          
+          <div>
+            <label>Senha:</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              className="login-input"
+              required 
+            />
+          </div>
+          
+          {/* Caixa de seleção estilizada e bem alinhada */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '5px 0 10px 0' }}>
+            <input 
+              type="checkbox" 
+              id="isStaff"
+              checked={isStaff} 
+              onChange={(e) => setIsStaff(e.target.checked)} 
+              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+            />
+            <label htmlFor="isStaff" style={{ cursor: 'pointer', fontWeight: 'bold', color: 'var(--text)' }}>
+              É Administrador?
+            </label>
+          </div>
+          
+          {/* Mantive o botão combinando com o estilo do login, mas verde por ser um cadastro */}
+          <button type="submit" className="login-button" style={{ backgroundColor: '#5cb85c' }}>
+            Cadastrar Funcionário
+          </button>
+        </form>
+        
+        {/* Mensagem de sucesso/erro na mesma estética */}
+        {mensagem && <div className="login-message">{mensagem}</div>}
+      </div>
     </div>
   );
 }

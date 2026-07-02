@@ -7,81 +7,70 @@ function TelaVeiculos() {
   const [searchParams] = useSearchParams();
   const clienteIdNaUrl = searchParams.get('cliente_id');
 
-  const [cpfBusca, setCpfBusca] = useState('');
   const [veiculos, setVeiculos] = useState([]);
-  const [mensagem, setMensagem] = useState('');
-  const [buscou, setBuscou] = useState(false);
   const [exibirFormulario, setExibirFormulario] = useState(false);
-  
-  // CAIXA DE MEMÓRIA DO VEÍCULO
   const [veiculoEmEdicao, setVeiculoEmEdicao] = useState(null);
+  const [termoBusca, setTermoBusca] = useState('');
 
-  useEffect(() => {
-    if (clienteIdNaUrl) {
-      buscarVeiculos({ cliente_id: clienteIdNaUrl });
-    }
-  }, [clienteIdNaUrl]);
+  const isAdmin = localStorage.getItem('is_admin') === 'true';
 
-  const buscarVeiculos = async (filtros) => {
-    setMensagem('Buscando veículos...');
+  const carregarVeiculos = async () => {
     try {
+      const filtros = clienteIdNaUrl ? { cliente_id: clienteIdNaUrl } : {};
       const dados = await veiculoServices.getVeiculos(filtros);
       setVeiculos(dados);
-      setMensagem('');
-      setBuscou(true);
     } catch (erro) {
-      setMensagem("Erro ao buscar os veículos.");
-      setVeiculos([]);
+      console.error("Erro ao carregar os veículos.", erro);lo
     }
   };
 
-  const handlePesquisarCPF = (e) => {
-    e.preventDefault();
-    if (!cpfBusca) {
-      setMensagem("Por favor, digite um CPF para buscar.");
-      return;
-    }
-    buscarVeiculos({ cpf: cpfBusca });
-  };
+  useEffect(() => {
+    carregarVeiculos();
+  }, [clienteIdNaUrl]);
 
   const handleSalvarSucesso = () => {
     setExibirFormulario(false);
-    setVeiculoEmEdicao(null); // Limpa a memória
-    if (clienteIdNaUrl) {
-      buscarVeiculos({ cliente_id: clienteIdNaUrl });
-    } else if (cpfBusca) {
-      buscarVeiculos({ cpf: cpfBusca });
-    }
+    setVeiculoEmEdicao(null);
+    carregarVeiculos();
   };
 
-  // A FUNÇÃO DO BOTÃO EDITAR
   const handleAbrirEdicao = (veiculo) => {
     setVeiculoEmEdicao(veiculo);
     setExibirFormulario(true);
   };
 
   const handleExcluir = async (id, placa) => {
-    const confirmacao = window.confirm(`Tem certeza que deseja excluir o veículo de placa ${placa}?`);
+    if (!id) {
+      alert("Erro: Não foi possível identificar o ID do veículo para exclusão.");
+      return;
+    }
     
-    if (confirmacao) {
+    if (window.confirm(`Tem certeza que deseja excluir o veículo de placa "${placa}"?`)) {
       try {
-        const resposta = await veiculoServices.excluirVeiculo(id);
-        alert(resposta.mensagem || "Veículo excluído com sucesso!");
+        // MUDE ESTA LINHA ABAIXO PARA O NOME EM PORTUGUÊS 
+        await veiculoServices.excluirVeiculo(id); 
         
-        // Recarrega a tabela para o carro sumir da tela na mesma hora
-        if (clienteIdNaUrl) {
-          buscarVeiculos({ cliente_id: clienteIdNaUrl });
-        } else if (cpfBusca) {
-          buscarVeiculos({ cpf: cpfBusca });
-        }
+        alert("Veículo excluído com sucesso!");
+        carregarVeiculos(); // Atualiza a tabela na hora
       } catch (erro) {
-        alert(erro.erro || "Erro ao tentar excluir o veículo.");
+        console.error("Erro completo:", erro);
+        alert("Erro ao excluir veículo.");
       }
     }
   };
 
+  const veiculosFiltrados = veiculos.filter(veiculo => {
+    const termo = termoBusca.toLowerCase();
+    return (
+      (veiculo.placa && veiculo.placa.toLowerCase().includes(termo)) ||
+      (veiculo.marca && veiculo.marca.toLowerCase().includes(termo)) ||
+      (veiculo.modelo && veiculo.modelo.toLowerCase().includes(termo)) ||
+      (veiculo.cliente_nome && veiculo.cliente_nome.toLowerCase().includes(termo))
+    );
+  });
+
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'left' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2>Módulo de Veículos</h2>
@@ -99,82 +88,83 @@ function TelaVeiculos() {
         )}
       </div>
 
+      {!exibirFormulario && (
+        <div style={{ marginBottom: '20px' }}>
+          <input 
+            type="text" 
+            placeholder="🔍 Buscar veículo por placa, marca, modelo ou proprietário..." 
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '12px 15px', 
+              borderRadius: '8px', 
+              border: '1px solid var(--border)', 
+              backgroundColor: 'var(--social-bg)',
+              color: 'var(--text)',
+              fontSize: '16px',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+      )}
+
       {exibirFormulario && (
         <FormVeiculo 
-          clientePreSelecionado={clienteIdNaUrl}
-          veiculoEmEdicao={veiculoEmEdicao} // Passando o bastão!
+          veiculoEmEdicao={veiculoEmEdicao} 
+          onSalvarSucesso={handleSalvarSucesso}
           aoCancelar={() => {
             setExibirFormulario(false);
             setVeiculoEmEdicao(null);
           }}
-          aoSalvarSucesso={handleSalvarSucesso}
         />
       )}
 
-      {!exibirFormulario && !clienteIdNaUrl && (
-        <form onSubmit={handlePesquisarCPF} style={{ backgroundColor: 'var(--social-bg)', padding: '20px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Buscar por CPF do Cliente:</label>
-            <input 
-              type="text" 
-              value={cpfBusca} 
-              onChange={(e) => setCpfBusca(e.target.value)} 
-              placeholder="Digite o CPF (ex: 00011122233)"
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border)', boxSizing: 'border-box' }}
-            />
-          </div>
-          <button type="submit" style={{ padding: '10px 20px', backgroundColor: 'var(--text-h)', color: 'var(--bg)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', height: '40px' }}>
-            🔍 Buscar
-          </button>
-        </form>
-      )}
-
-      {mensagem && <p style={{ fontWeight: 'bold', marginBottom: '15px' }}>{mensagem}</p>}
-
-      {!exibirFormulario && buscou && (
-        <div style={{ overflowX: 'auto', marginTop: '20px' }}>
-          {clienteIdNaUrl && (
-            <Link to={`/clientes/${clienteIdNaUrl}`} style={{ display: 'inline-block', marginBottom: '15px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
-              ← Voltar para o Detalhe do Cliente
-            </Link>
-          )}
-          
+      {!exibirFormulario && (
+        <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}>
             <thead>
               <tr style={{ backgroundColor: 'var(--social-bg)', borderBottom: '2px solid var(--border)' }}>
                 <th style={{ padding: '12px', textAlign: 'left' }}>Placa</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Veículo</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Cor</th>
-                <th style={{ padding: '12px', textAlign: 'center' }}>Ano</th>
-                <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Modelo / Marca</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Proprietário</th>
+                {isAdmin && <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>}
               </tr>
             </thead>
             <tbody>
-              {veiculos.length === 0 ? (
+              {veiculosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ padding: '20px', textAlign: 'center' }}>Nenhum veículo encontrado para este cliente.</td>
+                  <td colSpan={isAdmin ? "4" : "3"} style={{ padding: '20px', textAlign: 'center' }}>
+                    {veiculos.length === 0 ? "Nenhum veículo cadastrado." : "Nenhum veículo encontrado na busca."}
+                  </td>
                 </tr>
               ) : (
-                veiculos.map((veiculo) => (
+                veiculosFiltrados.map((veiculo) => (
                   <tr key={veiculo.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{veiculo.placa}</td>
-                    <td style={{ padding: '12px' }}>{veiculo.tipo} - {veiculo.marca} {veiculo.modelo}</td>
-                    <td style={{ padding: '12px' }}>{veiculo.cor}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{veiculo.ano}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <button 
-                            onClick={() => handleAbrirEdicao(veiculo)} 
-                            style={{ marginRight: '8px', padding: '5px 10px', cursor: 'pointer', backgroundColor: '#f0ad4e', border: 'none', borderRadius: '4px', color: '#fff' }}
-                        >
-                            Editar
-                        </button>
-                        <button 
-                            onClick={() => handleExcluir(veiculo.id, veiculo.placa)}
-                            style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
-                        >
-                            Excluir
-                        </button>
+                    <td style={{ padding: '12px' }}>
+                      <Link to={`/veiculos/${veiculo.id}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
+                        {veiculo.placa ? veiculo.placa.toUpperCase() : 'SEM PLACA'}
+                      </Link>
                     </td>
+                    <td style={{ padding: '12px' }}>{veiculo.marca} - {veiculo.modelo}</td>
+                    <td style={{ padding: '12px' }}>{veiculo.cliente_nome || veiculo.cliente?.nome || 'Não informado'}</td>
+                    
+                    {isAdmin && (
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <button 
+                          onClick={() => handleAbrirEdicao(veiculo)} 
+                          style={{ marginRight: '8px', padding: '5px 10px', cursor: 'pointer', backgroundColor: '#f0ad4e', border: 'none', borderRadius: '4px', color: '#fff' }}
+                        >
+                          Editar
+                        </button>
+                        <button 
+                          onClick={() => handleExcluir(veiculo.id, veiculo.placa)}
+                          style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
+                        >
+                          Excluir
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

@@ -6,9 +6,10 @@ function TelaInsumos() {
   const [insumos, setInsumos] = useState([]);
   const [exibirFormulario, setExibirFormulario] = useState(false);
   const [insumoEmEdicao, setInsumoEmEdicao] = useState(null);
-  
-  // CAIXA DE MEMÓRIA PARA A BUSCA (Igual a de Clientes)
   const [termoBusca, setTermoBusca] = useState('');
+
+  // 👇 CHAVE DE SEGURANÇA: Funcionário não edita nem exclui
+  const isAdmin = localStorage.getItem('is_admin') === 'true';
 
   const carregarInsumos = async () => {
     try {
@@ -47,7 +48,6 @@ function TelaInsumos() {
     }
   };
 
-  // Lógica da barra de pesquisa
   const insumosFiltrados = insumos.filter((insumo) => {
     const termo = termoBusca.toLowerCase();
     return (
@@ -57,13 +57,47 @@ function TelaInsumos() {
   });
 
   return (
-    <div style={{ maxWidth: '900px', margin: '20px auto', padding: '20px' }}>
-      <h2 style={{ color: 'var(--text)', borderBottom: '2px solid var(--border)', paddingBottom: '10px' }}>
-        📦 Gestão de Insumos
-      </h2>
+    <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2>Módulo de Insumos</h2>
+        
+        {!exibirFormulario && (
+          <button 
+            onClick={() => {
+              setInsumoEmEdicao(null);
+              setExibirFormulario(true);
+            }}
+            style={{ padding: '10px 15px', backgroundColor: 'var(--text-h)', color: 'var(--bg)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            + Cadastrar Novo Insumo
+          </button>
+        )}
+      </div>
 
-      {/* RENDERIZAÇÃO CONDICIONAL: Mostra o Form ou a Lista */}
-      {exibirFormulario ? (
+      {/* Barra de Pesquisa Padronizada */}
+      {!exibirFormulario && (
+        <div style={{ marginBottom: '20px' }}>
+          <input 
+            type="text" 
+            placeholder="🔍 Buscar insumo por nome ou marca..." 
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '12px 15px', 
+              borderRadius: '8px', 
+              border: '1px solid var(--border)', 
+              backgroundColor: 'var(--social-bg)',
+              color: 'var(--text)',
+              fontSize: '16px',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+      )}
+
+      {exibirFormulario && (
         <FormInsumo 
           aoCancelar={() => {
             setExibirFormulario(false);
@@ -72,40 +106,24 @@ function TelaInsumos() {
           aoSalvarSucesso={handleSalvarSucesso}
           insumoEmEdicao={insumoEmEdicao}
         />
-      ) : (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-            <button 
-              onClick={() => setExibirFormulario(true)}
-              style={{ padding: '10px 15px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              ➕ Cadastrar Novo Insumo
-            </button>
-            
-            {/* Barra de Pesquisa */}
-            <input 
-              type="text" 
-              placeholder="Buscar por nome ou marca..." 
-              value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
-              style={{ padding: '8px', width: '300px', borderRadius: '4px', border: '1px solid var(--border)' }}
-            />
-          </div>
+      )}
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', backgroundColor: 'var(--social-bg)' }}>
+      {!exibirFormulario && (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}>
             <thead>
-              <tr style={{ backgroundColor: 'var(--bg-color)', borderBottom: '2px solid var(--border)' }}>
+              <tr style={{ backgroundColor: 'var(--social-bg)', borderBottom: '2px solid var(--border)' }}>
                 <th style={{ padding: '12px', textAlign: 'left' }}>Nome</th>
                 <th style={{ padding: '12px', textAlign: 'left' }}>Marca</th>
-                <th style={{ padding: '12px', textAlign: 'center' }}>Qtd</th>
-                <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>
+                <th style={{ padding: '12px', textAlign: 'center' }}>Quantidade</th>
+                {isAdmin && <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>}
               </tr>
             </thead>
             <tbody>
               {insumosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>
-                    Nenhum insumo encontrado.
+                  <td colSpan={isAdmin ? "4" : "3"} style={{ padding: '20px', textAlign: 'center' }}>
+                    {insumos.length === 0 ? "Nenhum insumo cadastrado." : "Nenhum insumo encontrado na busca."}
                   </td>
                 </tr>
               ) : (
@@ -118,20 +136,24 @@ function TelaInsumos() {
                         {insumo.quantidade}
                       </span>
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => handleAbrirEdicao(insumo)} 
-                        style={{ marginRight: '8px', padding: '5px 10px', cursor: 'pointer', backgroundColor: '#f0ad4e', border: 'none', borderRadius: '4px', color: '#fff' }}
-                      >
-                        Editar
-                      </button>
-                      <button 
-                        onClick={() => handleExcluir(insumo.id, insumo.nome)}
-                        style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
-                      >
-                        Excluir
-                      </button>
-                    </td>
+                    
+                    {/* 👇 Só exibe os botões se for admin */}
+                    {isAdmin && (
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <button 
+                          onClick={() => handleAbrirEdicao(insumo)} 
+                          style={{ marginRight: '8px', padding: '5px 10px', cursor: 'pointer', backgroundColor: '#f0ad4e', border: 'none', borderRadius: '4px', color: '#fff' }}
+                        >
+                          Editar
+                        </button>
+                        <button 
+                          onClick={() => handleExcluir(insumo.id, insumo.nome)}
+                          style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
+                        >
+                          Excluir
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

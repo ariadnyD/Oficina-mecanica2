@@ -7,9 +7,9 @@ function TelaClientes() {
   const [clientes, setClientes] = useState([]);
   const [exibirFormulario, setExibirFormulario] = useState(false);
   const [clienteEmEdicao, setClienteEmEdicao] = useState(null); 
-  
-  // NOVA CAIXA DE MEMÓRIA PARA A BUSCA
   const [termoBusca, setTermoBusca] = useState('');
+
+  const isAdmin = localStorage.getItem('is_admin') === 'true';
 
   const carregarClientes = async () => {
     const dadosVindosDoDjango = await clienteServices.getClientes();
@@ -31,11 +31,18 @@ function TelaClientes() {
     setExibirFormulario(true);
   };
 
-  const handleExcluir = async (id, nome) => {
+  const handleExcluir = async (cpf, nome) => {
+    // Verifica se o CPF existe antes de avançar
+    if (!cpf) {
+      alert("Erro: Não foi possível identificar o CPF do cliente para exclusão.");
+      return;
+    }
+
     const confirmacao = window.confirm(`Tem certeza que deseja excluir o cliente ${nome}?`);
     if (confirmacao) {
       try {
-        const resposta = await clienteServices.excluirCliente(id);
+        // Certifique-se de que o clienteServices.excluirCliente aceita o cpf como argumento
+        const resposta = await clienteServices.excluirCliente(cpf);
         alert(resposta.mensagem || "Cliente desativado com sucesso!");
         carregarClientes();
       } catch (erro) {
@@ -44,12 +51,11 @@ function TelaClientes() {
     }
   };
 
-  // MÁGICA DA BUSCA: Filtra a lista em tempo real!
   const clientesFiltrados = clientes.filter((cliente) => {
     const termo = termoBusca.toLowerCase();
     return (
       cliente.nome.toLowerCase().includes(termo) ||
-      cliente.cpf.includes(termo) // Permite buscar por CPF também!
+      cliente.cpf.includes(termo) 
     );
   });
 
@@ -72,7 +78,6 @@ function TelaClientes() {
         )}
       </div>
 
-      {/* A BARRA DE PESQUISA */}
       {!exibirFormulario && (
         <div style={{ marginBottom: '20px' }}>
           <input 
@@ -113,41 +118,43 @@ function TelaClientes() {
                 <th style={{ padding: '12px', textAlign: 'left' }}>Nome</th>
                 <th style={{ padding: '12px', textAlign: 'left' }}>CPF</th>
                 <th style={{ padding: '12px', textAlign: 'left' }}>Telefone</th>
-                <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>
+                {isAdmin && <th style={{ padding: '12px', textAlign: 'center' }}>Ações</th>}
               </tr>
             </thead>
             <tbody>
-              {/* Usa os clientesFiltrados em vez da lista original */}
               {clientesFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ padding: '20px', textAlign: 'center' }}>
+                  <td colSpan={isAdmin ? "4" : "3"} style={{ padding: '20px', textAlign: 'center' }}>
                     {clientes.length === 0 ? "Nenhum cliente cadastrado." : "Nenhum cliente encontrado na busca."}
                   </td>
                 </tr>
               ) : (
                 clientesFiltrados.map((cliente) => (
-                  <tr key={cliente.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <tr key={cliente.cpf} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '12px' }}>
-                      <Link to={`/clientes/${cliente.id}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
+                      <Link to={`/clientes/${cliente.cpf}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 'bold' }}>
                         {cliente.nome}
                       </Link>
                     </td>
                     <td style={{ padding: '12px' }}>{cliente.cpf}</td>
                     <td style={{ padding: '12px' }}>{cliente.telefone}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => handleAbrirEdicao(cliente)} 
-                        style={{ marginRight: '8px', padding: '5px 10px', cursor: 'pointer', backgroundColor: '#f0ad4e', border: 'none', borderRadius: '4px', color: '#fff' }}
-                      >
-                        Editar
-                      </button>
-                      <button 
-                        onClick={() => handleExcluir(cliente.id, cliente.nome)}
-                        style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
-                      >
-                        Excluir
-                      </button>
-                    </td>
+                    
+                    {isAdmin && (
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <button 
+                          onClick={() => handleAbrirEdicao(cliente)} 
+                          style={{ marginRight: '8px', padding: '5px 10px', cursor: 'pointer', backgroundColor: '#f0ad4e', border: 'none', borderRadius: '4px', color: '#fff' }}
+                        >
+                          Editar
+                        </button>
+                        <button 
+                          onClick={() => handleExcluir(cliente.cpf, cliente.nome)}
+                          style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#d9534f', border: 'none', borderRadius: '4px', color: '#fff' }}
+                        >
+                          Excluir
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

@@ -25,10 +25,10 @@ const clienteServices = {
     }
   },
 
-  excluirCliente: async (id) => {
+  excluirCliente: async (cpf) => {
     try {
-      // O axios manda um DELETE para a URL específica do cliente (ex: clientes/3/)
-      const resposta = await api.delete(`clientes/${id}/`);
+      // O axios manda um DELETE para a URL específica do cliente usando o CPF
+      const resposta = await api.delete(`clientes/${cpf}/`);
       return resposta.data;
     } catch (erro) {
       if (erro.response && erro.response.data) {
@@ -37,29 +37,32 @@ const clienteServices = {
       throw erro;
     }
   },
-  reativarCliente: async (id, dadosAtualizados) => {
+  
+  reativarCliente: async (cpf, dadosAtualizados) => {
     try {
       // Mandamos os dados novos para atualizar o endereço/telefone caso a pessoa tenha mudado
-      const resposta = await api.patch(`clientes/${id}/reativar/`, dadosAtualizados);
+      const resposta = await api.patch(`clientes/${cpf}/reativar/`, dadosAtualizados);
       return resposta.data;
     } catch (erro) {
       if (erro.response && erro.response.data) throw erro.response.data;
       throw erro;
     }
   },
-  editarCliente: async (id, dadosAtualizados) => {
+
+  editarCliente: async (cpf, dadosAtualizados) => {
     try {
-      // Usamos o PATCH para dizer ao Django: "Atualize apenas esses dados deste ID"
-      const resposta = await api.patch(`clientes/${id}/`, dadosAtualizados);
+      // Usamos o PATCH para dizer ao Django: "Atualize apenas esses dados deste CPF"
+      const resposta = await api.patch(`clientes/${cpf}/`, dadosAtualizados);
       return resposta.data;
     } catch (erro) {
       if (erro.response && erro.response.data) throw erro.response.data;
       throw erro;
     }
   },
-  getClientePorId: async (id) => {
+
+  getClientePorId: async (cpf) => {
     try {
-      const resposta = await api.get(`clientes/${id}/`);
+      const resposta = await api.get(`clientes/${cpf}/`);
       return resposta.data;
     } catch (erro) {
       console.error("Erro ao buscar detalhes do cliente:", erro);
