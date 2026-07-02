@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Link, Navigate, useNavigate } from 'react
 import TelaClientes from './pages/cliente/TelaClientes';
 import DetalhesCliente from './pages/cliente/DetalhesCliente';
 import TelaVeiculos from './pages/veiculo/TelaVeiculos';
+import DetalhesVeiculo from './pages/veiculo/DetalhesVeiculo';
 import TelaProcedimentos from './pages/procedimento/TelaProcedimentos';
 import Login from './pages/login/Login';
 import CadastroFuncionario from './pages/funcionario/CadastroFuncionario';
@@ -113,6 +114,7 @@ function App() {
           {/* Todas as outras rotas agora ficam trancadas dentro do LayoutProtegido */}
           <Route path="/clientes" element={<LayoutProtegido><TelaClientes /></LayoutProtegido>} />
           <Route path="/veiculos" element={<LayoutProtegido><TelaVeiculos /></LayoutProtegido>} />
+          <Route path="/veiculos/:id" element={<LayoutProtegido><DetalhesVeiculo /></LayoutProtegido>} />
           <Route path="/clientes/:id" element={<LayoutProtegido><DetalhesCliente /></LayoutProtegido>} />
           <Route path="/procedimentos" element={<LayoutProtegido><TelaProcedimentos /></LayoutProtegido>} />
           <Route path="/cadastro-funcionario" element={<LayoutProtegido><CadastroFuncionario /></LayoutProtegido>} />
