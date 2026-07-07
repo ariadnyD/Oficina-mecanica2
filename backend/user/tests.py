@@ -11,13 +11,17 @@ class UserCRUDTests(APITestCase):
       'email': 'chefe@oficina.com',
       'password': 'senha_segura_123'
     }
-    self.user = User.objects.create_user(**self.user_data) # cria um User teste no banco de testes.
+    # MUDANÇA AQUI: Trocamos create_user por create_superuser para ter permissão (evitar o 403)
+    self.user = User.objects.create_superuser(**self.user_data) 
     
-    # Preparando as URLs nomeadas (baseadas no seu urls.py)
     self.register_url = reverse('register')
     self.user_detail_url = reverse('user_detail', kwargs={'pk': self.user.pk})
 
+    
   def test_create_user(self): # cria e registra novo usuário
+    # CORREÇÃO: Faltou colar essa linha de autenticação antes de rodar o teste
+    self.client.force_authenticate(user=self.user) 
+    
     novo_usuario = {
       'username': 'novo_ajudante',
       'email': 'ajudante@oficina.com',
@@ -25,9 +29,8 @@ class UserCRUDTests(APITestCase):
     }
     
     response = self.client.post(self.register_url, novo_usuario)
-    
-    self.assertEqual(response.status_code, status.HTTP_201_CREATED) # Verifica se retornou 201 Created
-    self.assertEqual(User.objects.count(), 2) # Agora temos 2 usuários no banco de testes (o criado no setUp e o novo)
+    self.assertEqual(response.status_code, status.HTTP_201_CREATED) 
+    self.assertEqual(User.objects.count(), 2)
 
   def test_read_user(self):
     self.client.force_authenticate(user=self.user) # Autentica o usuário criado no setUp

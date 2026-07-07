@@ -79,13 +79,13 @@ class InsumoCRUDTests(APITestCase):
 
   def test_delete_insumo(self):
     """Teste 4: Delete (Excluir um insumo)"""
-    # Fazendo um DELETE na url de detalhes
     response = self.client.delete(self.detail_url)
     
-    # Verifica se retornou 204 No Content
     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-    # Verifica se o estoque agora está vazio
-    self.assertEqual(Insumos.objects.count(), 0)
+    
+    # ADICIONADO: Verifica se o item foi desativado (Exclusão Lógica) em vez de apagado
+    self.insumo.refresh_from_db()
+    self.assertFalse(self.insumo.is_active)
     
   def test_acesso_negado_sem_autenticacao(self):
     """Teste Extra: Garante que um usuário não logado receba bloqueio"""

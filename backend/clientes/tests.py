@@ -21,13 +21,13 @@ class ClienteViewSetTestCase(APITestCase):
         
         self.cliente_teste = Cliente.objects.create(
             nome="Cliente de Teste",
-            cpf="000.000.000-00",
+            cpf="00000000000",
             data_nascimento="1990-01-01",
             endereco="Rua Teste, 123",
             telefone="(00) 00000-0000"
         )
         
-        self.url_detalhe = f'/api/clientes/{self.cliente_teste.id}/'
+        self.url_detalhe = f'/api/clientes/{self.cliente_teste.cpf}/'
 
     def test_cadastrar_cliente(self):
         """Testa a operação de INSERIR (POST) - TA01.02"""

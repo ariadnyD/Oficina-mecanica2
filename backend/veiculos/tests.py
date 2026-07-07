@@ -12,6 +12,7 @@ class VeiculoViewSetTest(APITestCase):
         # Preparação (Arrange): Cria um cliente real no banco de testes para satisfazer o vínculo
         self.cliente = Cliente.objects.create(
             nome="Cliente Teste",
+            cpf="123.456.789-00", # <-- ADICIONE O CPF AQUI (É obrigatório agora)
             data_nascimento="1990-01-01"
         )
         
@@ -21,7 +22,7 @@ class VeiculoViewSetTest(APITestCase):
             "tipo": "Carro",
             "cor": "Prata",
             "placa": "ABC-1234",
-            "cliente": self.cliente.id
+            "cliente": self.cliente.cpf # <-- TROQUE .id POR .cpf AQUI
         }
 
     # 1. Teste de INSERIR (Create)
